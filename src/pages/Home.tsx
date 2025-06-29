@@ -12,6 +12,8 @@ const Home = () => {
   return (
     <div>
       <h2>Trending Tokens (Jupiter)</h2>
+      <h1 className="text-4xl font-bold text-red-500">Tailwind is working?</h1>
+
 
       <input
   type="text"
