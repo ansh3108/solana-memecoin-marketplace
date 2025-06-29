@@ -2,7 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useTokenList } from "../hooks/useTokenList";
 
-const TokenPage: React.FC = () => {
+const TokenPage = () => {
     const { mint } = useParams();
     const { tokens, loading } = useTokenList();
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTokenList } from "../hooks/useTokenList";
 import { Link } from "react-router-dom";
 
-const Home: React.FC = () => {
+const Home = () => {
   const { tokens, loading, error } = useTokenList();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -14,12 +14,13 @@ const Home: React.FC = () => {
       <h2>Trending Tokens (Jupiter)</h2>
 
       <input
-        type="text"
-        placeholder="Search tokens by name or symbol..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-        className="w-full px-4 py-2 mb-6 rounded-xl border border-gray-700 bg-[#0f0f0f] text-white placeholder-gray-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-      />
+  type="text"
+  placeholder="Search tokens by name or symbol..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+  className="w-full max-w-md px-4 py-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-white placeholder-gray-500 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+/>
+
 
       <table style={{ width: "100%", textAlign: "left", marginTop: "1rem" }}>
         <thead>
