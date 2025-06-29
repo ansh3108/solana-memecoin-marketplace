@@ -6,6 +6,7 @@ import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { clusterApiUrl } from "@solana/web3.js";
 
+
 import Home from "./pages/Home";
 import TokenPage from "./pages/TokenPage"
 import "@solana/wallet-adapter-react-ui/styles.css"

@@ -25,7 +25,7 @@ const fetchTokens = async () => {
 
     const filtered = allTokens
       .filter((token) => token?.symbol && token?.name)
-      .slice(0, 100); // limit to 100
+      .slice(0, 100); 
 
     setTokens(filtered);
   } catch (err: any) {
