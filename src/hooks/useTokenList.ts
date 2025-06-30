@@ -1,43 +1,38 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { TokenListProvider, TokenInfo } from "@solana/spl-token-registry";
 
-export interface TokenInfo {
-  address: string;
-  symbol: string;
-  name: string;
-  decimals: number;
-  logoURI?: string;
-  coingeckoId?: string;
-}
+export type ExtendedTokenInfo = TokenInfo & {
+  extensions?: {
+    coingeckoId?: string;
+    website?: string;
+    twitter?: string;
+  };
+};
 
 export const useTokenList = () => {
-  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [tokens, setTokens] = useState<ExtendedTokenInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const fetchTokens = async () => {
-  try {
-    const response = await axios.get("https://token.jup.ag/all");
-
-    const allTokens = response.data as TokenInfo[];
-
-    console.log("✅ All tokens raw:", allTokens.slice(0, 5));
-
-    const filtered = allTokens
-      .filter((token) => token?.symbol && token?.name)
-      .slice(0, 100); 
-
-    setTokens(filtered);
-  } catch (err: any) {
-    console.error("❌ Token list fetch failed:", err);
-    setError(err.message || "Token list fetch failed");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
   useEffect(() => {
+    const fetchTokens = async () => {
+      try {
+        const tokenListContainer = await new TokenListProvider().resolve();
+        const allTokens = tokenListContainer.getList();
+
+        const solanaTokens = allTokens.filter(
+          (token) => token.chainId === 101
+        ) as ExtendedTokenInfo[];
+
+        setTokens(solanaTokens);
+      } catch (err: any) {
+        console.error("❌ Token list fetch failed:", err);
+        setError(err.message || "Token fetch failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTokens();
   }, []);
 
