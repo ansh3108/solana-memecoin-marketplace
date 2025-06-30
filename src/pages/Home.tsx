@@ -2,73 +2,81 @@ import React, { useState } from "react";
 import { useTokenList } from "../hooks/useTokenList";
 import { Link } from "react-router-dom";
 
-const Home = () => {
+const Home: React.FC = () => {
   const { tokens, loading, error } = useTokenList();
   const [searchTerm, setSearchTerm] = useState("");
 
-  if (loading) return <p>Loading token list...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading) return <p className="text-white text-center mt-8">Loading token list...</p>;
+  if (error) return <p className="text-red-500 text-center mt-8">Error: {error}</p>;
 
   return (
-    <div>
-      <h2>Trending Tokens (Jupiter)</h2>
-      <h1 className="text-4xl font-bold text-red-500">Tailwind is working?</h1>
+    <div className="min-h-screen bg-[#0e0e0e] text-white px-6 py-10">
+      <h2 className="text-3xl font-bold mb-6">🔥 Trending Tokens (Jupiter)</h2>
 
-
+      {/* Search bar */}
       <input
-  type="text"
-  placeholder="Search tokens by name or symbol..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-  className="w-full max-w-md px-4 py-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-white placeholder-gray-500 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
-/>
+        type="text"
+        placeholder="🔍 Search tokens by name or symbol..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+        className="w-full px-4 py-3 mb-6 rounded-lg border border-gray-600 bg-[#1a1a1a] text-white placeholder-gray-400 shadow focus:outline-none focus:ring-2 focus:ring-violet-600"
+      />
 
-
-      <table style={{ width: "100%", textAlign: "left", marginTop: "1rem" }}>
-        <thead>
-          <tr>
-            <th>Logo</th>
-            <th>Token</th>
-            <th>Symbol</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(tokens) && tokens.length > 0 ? (
-            tokens
-              .filter((token) =>
-                token.name?.toLowerCase().includes(searchTerm) ||
-                token.symbol.toLowerCase().includes(searchTerm) 
-              )
-              .map((token) => (
-              <tr key={token.address}>
-                <td>
-                  {token.logoURI ? (
-                    <img
-                      src={token.logoURI}
-                      alt={token.symbol}
-                      width="24"
-                      height="24"
-                      style={{ borderRadius: "50%" }}
-                    />
-                  ) : (
-                    "No Logo"
-                  )}
-                </td>
-                <td>
-                  <Link to={`/token/${token.address}`}>
-                    {token.name || "Unnamed Token"}
-                  </Link>
-                </td>
-                <td>{token.symbol || "N/A"}</td>
-              </tr>
-            ))
-          ) : (
+      {/* Token Table */}
+      <div className="overflow-x-auto rounded-xl shadow-lg">
+        <table className="w-full table-auto bg-[#1a1a1a] rounded-xl overflow-hidden">
+          <thead className="bg-[#222] text-gray-400">
             <tr>
-              <td colSpan={3}>No tokens found</td>
+              <th className="py-3 px-4 text-left">Logo</th>
+              <th className="py-3 px-4 text-left">Token</th>
+              <th className="py-3 px-4 text-left">Symbol</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {Array.isArray(tokens) && tokens.length > 0 ? (
+              tokens
+                .filter(
+                  (token) =>
+                    token.name?.toLowerCase().includes(searchTerm) ||
+                    token.symbol.toLowerCase().includes(searchTerm)
+                )
+                .map((token) => (
+                  <tr
+                    key={token.address}
+                    className="border-b border-[#333] hover:bg-[#2a2a2a] transition"
+                  >
+                    <td className="py-3 px-4">
+                      {token.logoURI ? (
+                        <img
+                          src={token.logoURI}
+                          alt={token.symbol}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      ) : (
+                        <span className="text-gray-500">No Logo</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <Link
+                        to={`/token/${token.address}`}
+                        className="hover:underline text-violet-400"
+                      >
+                        {token.name || "Unnamed Token"}
+                      </Link>
+                    </td>
+                    <td className="py-3 px-4 text-gray-300">{token.symbol || "N/A"}</td>
+                  </tr>
+                ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="text-center py-6 text-gray-500">
+                  No tokens found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
