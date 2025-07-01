@@ -2,6 +2,29 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useTokenList } from "../hooks/useTokenList";
 import { TokenInfo } from "@solana/spl-token-registry";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement, 
+  PointElement, 
+  LinearScale,
+  TimeScale,
+  Tooltip,
+  Legend,
+  Filler
+} from "chart.js";
+import "chartjs-adapter-date-fns";
+import { useCoinGeckoChart } from "../hooks/useCoinGeckoChart";
+
+ChartJS.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  TimeScale,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 type ExtendedTokenInfo = TokenInfo & {
   extensions?: {
@@ -18,6 +41,8 @@ const TokenPage: React.FC = () => {
   if (loading) return <p className="text-white">Loading token data...</p>;
 
   const token = tokens.find((t) => t.address === mint) as ExtendedTokenInfo;
+  const coingeckId = token.extensions?.coingeckoId;
+  const { data: chartData, loading: chartLoading } = useCoinGeckoChart(coingeckId);
 
   if (!token) return <p className="text-white">Token not found</p>;
 
@@ -87,22 +112,51 @@ const TokenPage: React.FC = () => {
       </div>
 
       <div className="mt-6">
-        <h3 className="text-xl font-semibold mb-2">Price Chart</h3>
-        {hasChart ? (
-          <iframe
-            title="Chart"
-            src={`https://www.tradingview.com/widgetembed/?symbol=BINANCE:${token.symbol}USDT&interval=15&theme=dark`}
-            width="100%"
-            height="400"
-            frameBorder="0"
-            allowTransparency={true}
+        <h3 className="text-xl font-semibold mb-2">Price Chart (7d)</h3>
+        {chartLoading ? (
+          <p>Loading chart...</p>
+        ) : chartData.length > 0 ? (
+          <Line
+            data={{
+              labels: chartData.map((pt) => new Date(pt.time)),
+              datasets: [
+                {
+                  label: `${token.symbol} Price`,
+                  data: chartData.map((pt) => pt.price),
+                  borderColor: "rgba(100, 108, 255, 1)",
+                  backgroundColor: "rgba(100, 108, 255, 0.2)",
+                  tension: 0.3,
+                  fill: true
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => `$${context.parsed.y.toFixed(6)}`
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  type: "time",
+                  time: { unit: "day" },
+                  ticks: { color: "#ccc" }
+                },
+                y: {
+                  ticks: { color: "#ccc" }
+                }
+              }
+            }}
           />
         ) : (
-          <div className="border border-gray-600 p-6 text-center text-gray-400">
-            No chart available for this token.
-          </div>
+          <p>No chart data available.</p>
         )}
       </div>
+
 
       <div className="mt-10">
         <h3 className="text-xl font-semibold mb-2">Swap this token</h3>
