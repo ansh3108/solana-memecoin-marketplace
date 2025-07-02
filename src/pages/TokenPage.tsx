@@ -1,22 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { addToWatchList, removeFromWatchList, isInWatchList } from "../utils/watchlist";
 import { useParams } from "react-router-dom";
-import { useTokenList } from "../hooks/useTokenList";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { TokenInfo } from "@solana/spl-token-registry";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  LineElement, 
-  PointElement, 
+  LineElement,
+  PointElement,
   LinearScale,
   TimeScale,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
+
+import { useTokenList } from "../hooks/useTokenList";
 import { useCoinGeckoChart } from "../hooks/useCoinGeckoChart";
+import {
+  addToWatchList,
+  removeFromWatchList,
+  isInWatchList,
+} from "../utils/watchlist";
 
 ChartJS.register(
   LineElement,
@@ -39,26 +44,23 @@ type ExtendedTokenInfo = TokenInfo & {
 const TokenPage: React.FC = () => {
   const { mint } = useParams();
   const { tokens, loading } = useTokenList();
-const { publicKey } = useWallet();
-const [inWatchlist, setInWatchlist] = useState(false);
+  const { publicKey } = useWallet();
+  const [inWatchlist, setInWatchlist] = useState(false);
 
-useEffect(() => {
-  if (publicKey && token?.address) {
-    setInWatchlist(isInWatchlist(publicKey.toBase58(), token.address));
-  }
-}, [publicKey, token?.address]);
+  const token = tokens.find((t) => t.address === mint) as ExtendedTokenInfo | undefined;
+  const coingeckoId = token?.extensions?.coingeckoId ?? "";
+  const { data: chartData, loading: chartLoading } = useCoinGeckoChart(coingeckoId);
+
+  useEffect(() => {
+    if (publicKey && token?.address) {
+      setInWatchlist(isInWatchList(publicKey.toBase58(), token.address));
+    }
+  }, [publicKey, token?.address]);
 
   if (loading) return <p className="text-white">Loading token data...</p>;
+  if (!token) return <p className="text-white">Token not found.</p>;
 
-  const token = tokens.find((t) => t.address === mint) as ExtendedTokenInfo;
-  const coingeckId = token.extensions?.coingeckoId;
-  const { data: chartData, loading: chartLoading } = useCoinGeckoChart(coingeckId);
-
-  if (!token) return <p className="text-white">Token not found</p>;
-
-  const hasChart = ["BONK", "WIF", "WEN", "SAMO", "DOGE", "PEPE"].includes(
-    token.symbol.toUpperCase()
-  );
+  const hasChart = chartData && chartData.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto p-4 text-white">
@@ -70,6 +72,10 @@ useEffect(() => {
             width={64}
             height={64}
             className="rounded-full"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/assets/default-token.png";
+            }}
           />
         )}
         <div>
@@ -77,26 +83,26 @@ useEffect(() => {
             {token.name}{" "}
             <span className="text-gray-400">({token.symbol})</span>
           </h2>
-          <p className="text-sm text-gray-400">
-            Mint: <span className="font-mono">{token.address}</span>
+          <p className="text-sm text-gray-400 font-mono break-all">
+            Mint: {token.address}
           </p>
 
           {publicKey && (
-  <button
-    onClick={() => {
-      if (!inWatchlist) {
-        addToWatchList(publicKey.toBase58(), token.address);
-      } else {
-        removeFromWatchList(publicKey.toBase58(), token.address);
-      }
-      setInWatchlist(!inWatchlist);
-    }}
-    className="mt-2 px-4 py-2 rounded-md bg-purple-700 hover:bg-purple-800 text-white"
-  >
-    {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
-  </button>
-)}
-
+            <button
+              onClick={() => {
+                const base58 = publicKey.toBase58();
+                if (!inWatchlist) {
+                  addToWatchList(base58, token.address);
+                } else {
+                  removeFromWatchList(base58, token.address);
+                }
+                setInWatchlist(!inWatchlist);
+              }}
+              className="mt-2 px-4 py-2 rounded-md bg-purple-700 hover:bg-purple-800 text-white"
+            >
+              {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+            </button>
+          )}
 
           {token.extensions && (
             <div className="mt-2 space-x-4 text-sm">
@@ -112,10 +118,7 @@ useEffect(() => {
               )}
               {token.extensions.twitter && (
                 <a
-                  href={`https://twitter.com/${token.extensions.twitter.replace(
-                    "@",
-                    ""
-                  )}`}
+                  href={`https://twitter.com/${token.extensions.twitter.replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:underline"
@@ -142,7 +145,7 @@ useEffect(() => {
         <h3 className="text-xl font-semibold mb-2">Price Chart (7d)</h3>
         {chartLoading ? (
           <p>Loading chart...</p>
-        ) : chartData.length > 0 ? (
+        ) : hasChart ? (
           <Line
             data={{
               labels: chartData.map((pt) => new Date(pt.time)),
@@ -153,7 +156,7 @@ useEffect(() => {
                   borderColor: "rgba(100, 108, 255, 1)",
                   backgroundColor: "rgba(100, 108, 255, 0.2)",
                   tension: 0.3,
-                  fill: true
+                  fill: true,
                 },
               ],
             }}
@@ -163,7 +166,7 @@ useEffect(() => {
                 legend: { display: false },
                 tooltip: {
                   callbacks: {
-                    label: (context) => `$${context.parsed.y.toFixed(6)}`
+                    label: (ctx) => `$${ctx.parsed.y.toFixed(6)}`
                   }
                 }
               },
@@ -183,7 +186,6 @@ useEffect(() => {
           <p>No chart data available.</p>
         )}
       </div>
-
 
       <div className="mt-10">
         <h3 className="text-xl font-semibold mb-2">Swap this token</h3>
