@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { addToWatchList, removeFromWatchList, isInWatchList } from "../utils/watchlist";
 import { useParams } from "react-router-dom";
 import { useTokenList } from "../hooks/useTokenList";
 import { TokenInfo } from "@solana/spl-token-registry";
@@ -37,6 +39,14 @@ type ExtendedTokenInfo = TokenInfo & {
 const TokenPage: React.FC = () => {
   const { mint } = useParams();
   const { tokens, loading } = useTokenList();
+const { publicKey } = useWallet();
+const [inWatchlist, setInWatchlist] = useState(false);
+
+useEffect(() => {
+  if (publicKey && token?.address) {
+    setInWatchlist(isInWatchlist(publicKey.toBase58(), token.address));
+  }
+}, [publicKey, token?.address]);
 
   if (loading) return <p className="text-white">Loading token data...</p>;
 
@@ -70,6 +80,23 @@ const TokenPage: React.FC = () => {
           <p className="text-sm text-gray-400">
             Mint: <span className="font-mono">{token.address}</span>
           </p>
+
+          {publicKey && (
+  <button
+    onClick={() => {
+      if (!inWatchlist) {
+        addToWatchList(publicKey.toBase58(), token.address);
+      } else {
+        removeFromWatchList(publicKey.toBase58(), token.address);
+      }
+      setInWatchlist(!inWatchlist);
+    }}
+    className="mt-2 px-4 py-2 rounded-md bg-purple-700 hover:bg-purple-800 text-white"
+  >
+    {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+  </button>
+)}
+
 
           {token.extensions && (
             <div className="mt-2 space-x-4 text-sm">
