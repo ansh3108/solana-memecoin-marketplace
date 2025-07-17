@@ -22,7 +22,6 @@ import {
   removeFromWatchList,
   isInWatchList,
 } from "../utils/watchlist";
-import { getSafeLogoURI } from "../utils/getSafeLogoURI";
 
 ChartJS.register(
   LineElement,
@@ -68,14 +67,15 @@ const TokenPage: React.FC = () => {
       <div className="flex items-center space-x-4">
         {token.logoURI && (
           <img
-            src={getSafeLogoURI(token.logoURI)}
+            src={token.logoURI}
             alt={token.symbol}
             width={64}
             height={64}
             className="rounded-full"
             onError={(e) => {
-              e.currentTarget.src = "/assets/default-token.png"
-            }} 
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/assets/default-token.png";
+            }}
           />
         )}
         <div>
